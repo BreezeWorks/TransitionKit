@@ -55,29 +55,29 @@
 /**
  Sets a block to be executed before the state machine transitions into the state modeled by the receiver.
  
- @param block The block to executed before a state machine enters the receiver's state. The block has no return value and takes two arguments: the state object and the state machine that will transition into the receiver's state.
+ @param block The block to executed before a state machine enters the receiver's state. The block has no return value and takes three arguments: the state object, user info for event and the state machine that will transition into the receiver's state.
  */
-- (void)setWillEnterStateBlock:(void (^)(TKState *state, TKStateMachine *stateMachine))block;
+- (void)setWillEnterStateBlock:(void (^)(TKState *state, id userInfo, TKStateMachine *stateMachine))block;
 
 /**
  Sets a block to be executed after the state machine has transitioned into the state modeled by the receiver.
  
- @param block The block to executed after a state machine enters the receiver's state. The block has no return value and takes two arguments: the state object and the state machine that transitioned into the receiver's state.
+ @param block The block to executed after a state machine enters the receiver's state. The block has no return value and takes three arguments: the state object, user info for event and the state machine that transitioned into the receiver's state.
  */
-- (void)setDidEnterStateBlock:(void (^)(TKState *state, TKStateMachine *stateMachine))block;
+- (void)setDidEnterStateBlock:(void (^)(TKState *state, id userInfo, TKStateMachine *stateMachine))block;
 
 /**
  Sets a block to be executed before the state machine transitions out of the state modeled by the receiver.
  
- @param block The block to executed before a state machine exits the receiver's state. The block has no return value and takes two arguments: the state object and the state machine that will transition out of the receiver's state.
+ @param block The block to executed before a state machine exits the receiver's state. The block has no return value and takes three arguments: the state object, user info for event and the state machine that will transition out of the receiver's state.
  */
-- (void)setWillExitStateBlock:(void (^)(TKState *state, TKStateMachine *stateMachine))block;
+- (void)setWillExitStateBlock:(void (^)(TKState *state, id userInfo, TKStateMachine *stateMachine))block;
 
 /**
  Sets a block to be executed after the state machine has transitioned out of the state modeled by the receiver.
  
- @param block The block to executed after a state machine exit the receiver's state. The block has no return value and takes two arguments: the state object and the state machine that transitioned out of the receiver's state.
+ @param block The block to executed after a state machine exit the receiver's state. The block has no return value and takes three arguments: the state object, user info for event and the state machine that transitioned out of the receiver's state.
  */
-- (void)setDidExitStateBlock:(void (^)(TKState *state, TKStateMachine *stateMachine))block;
+- (void)setDidExitStateBlock:(void (^)(TKState *state, id userInfo, TKStateMachine *stateMachine))block;
 
 @end

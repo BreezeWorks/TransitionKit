@@ -195,10 +195,11 @@
  If the receiver has not yet been activated, then the first event fired will activate it. If the specified transition is not permitted, then `NO` will be returned and an `TKInvalidTransitionError` will be created. If the `shouldFireEventBlock` of the specified event returns `NO`, then the event is declined, `NO` will be returned, and an `TKTransitionDeclinedError` will be created.
  
  @param eventOrEventName A `TKEvent` object or an `NSString` object that identifies an event by name.
+ @param userInfo An object that will be passed to all blocks and notifications.
  @param error A pointer to an `NSError` object that will be set if the event fails to fire.
  @return `YES` if the event is fired, else `NO`.
  */
-- (BOOL)fireEvent:(id)eventOrEventName error:(NSError **)error;
+- (BOOL)fireEvent:(id)eventOrEventName userInfo:(id)userInfo error:(NSError **)error;
 
 @end
 
@@ -230,6 +231,11 @@ extern NSString *const TKStateMachineDidChangeStateNewStateUserInfoKey;
  A key in the `userInfo` dictionary of a `TKStateMachineDidChangeStateNotification` notification specifying the event that triggered the transition between states.
  */
 extern NSString *const TKStateMachineDidChangeStateEventUserInfoKey;
+
+/**
+ A key in the `userInfo` dictionary of a `TKStateMachineDidChangeStateNotification` notification specifying the user info for event that triggered the transition between states.
+ */
+extern NSString *const TKStateMachineDidChangeStateUserInfoKey;
 
 /**
  An exception raised when an attempt is made to mutate an immutable `TKStateMachine` object.

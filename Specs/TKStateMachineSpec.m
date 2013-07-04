@@ -205,7 +205,7 @@ describe(@"setting the initial state", ^{
     context(@"when the state machine has been started", ^{
         it(@"raises an exception", ^{
             stateMachine.initialState = [stateMachine stateNamed:@"Dating"];
-            [stateMachine fireEvent:@"Break Up" error:nil];
+            [stateMachine fireEvent:@"Break Up" userInfo:nil error:nil];
             [[theBlock(^{
                 stateMachine.initialState = [stateMachine stateNamed:@"Married"];
             }) should] raiseWithName:TKStateMachineIsImmutableException reason:@"Unable to modify state machine: The state machine has already been activated."];
@@ -256,40 +256,40 @@ describe(@"A State Machine Modeling Dating", ^{
         
         stateMachine = [TKStateMachine new];
         singleState = [TKState stateWithName:@"Single"];
-        [singleState setDidEnterStateBlock:^(TKState *state, TKStateMachine *stateMachine) {
+        [singleState setDidEnterStateBlock:^(TKState *state, id userInfo, TKStateMachine *stateMachine) {
             person.lookingForLove = YES;
         }];
-        [singleState setDidExitStateBlock:^(TKState *state, TKStateMachine *stateMachine) {
+        [singleState setDidExitStateBlock:^(TKState *state, id userInfo, TKStateMachine *stateMachine) {
             person.lookingForLove = NO;
         }];
         datingState = [TKState stateWithName:@"Dating"];
-        [datingState setDidEnterStateBlock:^(TKState *state, TKStateMachine *stateMachine) {
+        [datingState setDidEnterStateBlock:^(TKState *state, id userInfo, TKStateMachine *stateMachine) {
             person.happy = YES;
         }];
-        [datingState setDidExitStateBlock:^(TKState *state, TKStateMachine *stateMachine) {
+        [datingState setDidExitStateBlock:^(TKState *state, id userInfo, TKStateMachine *stateMachine) {
             person.happy = NO;
         }];
         marriedState = [TKState stateWithName:@"Married"];
         [stateMachine addStates:@[ singleState, datingState, marriedState ]];
         
         startDating = [TKEvent eventWithName:@"Start Dating" transitioningFromStates:@[ singleState ] toState:datingState];
-        [startDating setDidFireEventBlock:^(TKEvent *event, TKStateMachine *stateMachine) {
+        [startDating setDidFireEventBlock:^(TKEvent *event, id userInfo, TKStateMachine *stateMachine) {
             [person updateRelationshipStatusOnFacebook];
         }];
         breakup = [TKEvent eventWithName:@"Break Up" transitioningFromStates:@[ datingState ] toState:singleState];
-        [breakup setDidFireEventBlock:^(TKEvent *event, TKStateMachine *stateMachine) {
+        [breakup setDidFireEventBlock:^(TKEvent *event, id userInfo, TKStateMachine *stateMachine) {
             [person updateRelationshipStatusOnFacebook];
             [person startDrinkingHeavily];
         }];
         getMarried = [TKEvent eventWithName:@"Get Married" transitioningFromStates:@[ datingState ] toState:marriedState];
         divorce = [TKEvent eventWithName:@"Divorce" transitioningFromStates:@[ marriedState ] toState:singleState];
-        [divorce setWillFireEventBlock:^(TKEvent *event, TKStateMachine *stateMachine) {
+        [divorce setWillFireEventBlock:^(TKEvent *event, id userInfo, TKStateMachine *stateMachine) {
             person.consultingLawyer = YES;
         }];
-        [divorce setShouldFireEventBlock:^BOOL(TKEvent *event, TKStateMachine *stateMachine) {
+        [divorce setShouldFireEventBlock:^BOOL(TKEvent *event, id userInfo, TKStateMachine *stateMachine) {
             return person.isWillingToGiveUpHalfOfEverything;
         }];
-        [divorce setDidFireEventBlock:^(TKEvent *event, TKStateMachine *stateMachine) {
+        [divorce setDidFireEventBlock:^(TKEvent *event, id userInfo, TKStateMachine *stateMachine) {
             person.consultingLawyer = NO;
             [person startDrinkingHeavily];
             [person startTryingToPickUpCollegeGirls];
@@ -305,30 +305,30 @@ describe(@"A State Machine Modeling Dating", ^{
         });
         
         it(@"transitions to the Dating state", ^{
-            [stateMachine fireEvent:@"Start Dating" error:nil];
+            [stateMachine fireEvent:@"Start Dating" userInfo:nil error:nil];
             [[stateMachine.currentState.name should] equal:@"Dating"];
         });
         
         it(@"returns YES", ^{
-            BOOL success = [stateMachine fireEvent:@"Start Dating" error:nil];
+            BOOL success = [stateMachine fireEvent:@"Start Dating" userInfo:nil error:nil];
             [[@(success) should] beYes];
         });
         
         it(@"returns a nil error", ^{
             NSError *error = nil;
-            [stateMachine fireEvent:@"Start Dating" error:&error];
+            [stateMachine fireEvent:@"Start Dating" userInfo:nil error:&error];
             [error shouldBeNil];
         });
         
         it(@"is no longer looking for love", ^{
             [[@(person.isLookingForLove) should] beYes];
-            [stateMachine fireEvent:@"Start Dating" error:nil];
+            [stateMachine fireEvent:@"Start Dating" userInfo:nil error:nil];
             [[@(person.isLookingForLove) should] beNo];
         });
         
         it(@"is happy", ^{
             [[@(person.isHappy) should] beNo];
-            [stateMachine fireEvent:@"Start Dating" error:nil];
+            [stateMachine fireEvent:@"Start Dating" userInfo:nil error:nil];
             [[@(person.isHappy) should] beYes];
         });
         
@@ -337,7 +337,7 @@ describe(@"A State Machine Modeling Dating", ^{
             id observer = [[NSNotificationCenter defaultCenter] addObserverForName:TKStateMachineDidChangeStateNotification object:stateMachine queue:nil usingBlock:^(NSNotification *note) {
                 notification = note;
             }];
-            [stateMachine fireEvent:@"Start Dating" error:nil];
+            [stateMachine fireEvent:@"Start Dating" userInfo:nil error:nil];
             [[expectFutureValue(notification) shouldEventually] beNonNil];
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
             [[[[notification.userInfo objectForKey:TKStateMachineDidChangeStateOldStateUserInfoKey] name] should] equal:@"Single"];
@@ -353,21 +353,21 @@ describe(@"A State Machine Modeling Dating", ^{
         
         it(@"updates their relationship status on Facebook", ^{
             [[person should] receive:@selector(updateRelationshipStatusOnFacebook)];
-            [stateMachine fireEvent:@"Break Up" error:nil];
+            [stateMachine fireEvent:@"Break Up" userInfo:nil error:nil];
         });
         
         it(@"starts drinking heavily", ^{
             [[person should] receive:@selector(startDrinkingHeavily)];
-            [stateMachine fireEvent:@"Break Up" error:nil];
+            [stateMachine fireEvent:@"Break Up" userInfo:nil error:nil];
         });
         
         it(@"starts looking for love", ^{
-            [stateMachine fireEvent:@"Break Up" error:nil];
+            [stateMachine fireEvent:@"Break Up" userInfo:nil error:nil];
             [[@(person.isLookingForLove) should] beYes];
         });
         
         it(@"becomes unhappy", ^{
-            [stateMachine fireEvent:@"Break Up" error:nil];
+            [stateMachine fireEvent:@"Break Up" userInfo:nil error:nil];
             [[@(person.isHappy) should] beNo];
         });
     });
@@ -394,29 +394,29 @@ describe(@"A State Machine Modeling Dating", ^{
             });
             
             it(@"fails to fire the event", ^{
-                [[@([stateMachine fireEvent:@"Divorce" error:nil]) should] beNo];
+                [[@([stateMachine fireEvent:@"Divorce" userInfo:nil error:nil]) should] beNo];
             });
             
             it(@"fails with a TKTransitionDeclinedError", ^{
                 NSError *error = nil;
-                [stateMachine fireEvent:@"Divorce" error:&error];
+                [stateMachine fireEvent:@"Divorce" userInfo:nil error:&error];
                 [[@(error.code) should] equal:@(TKTransitionDeclinedError)];
             });
             
             it(@"sets a description on the error", ^{
                 NSError *error = nil;
-                [stateMachine fireEvent:@"Divorce" error:&error];
+                [stateMachine fireEvent:@"Divorce" userInfo:nil error:&error];
                 [[error.localizedDescription should] equal:@"The event declined to be fired."];
             });
             
             it(@"sets a failure reason on the error", ^{
                 NSError *error = nil;
-                [stateMachine fireEvent:@"Divorce" error:&error];
+                [stateMachine fireEvent:@"Divorce" userInfo:nil error:&error];
                 [[error.localizedFailureReason should] equal:@"An attempt to fire the 'Divorce' event was declined because `shouldFireEventBlock` returned `NO`."];
             });
             
             it(@"stays married", ^{
-                [stateMachine fireEvent:@"Divorce" error:nil];
+                [stateMachine fireEvent:@"Divorce" userInfo:nil error:nil];
                 [[stateMachine.currentState.name should] equal:@"Married"];
             });
         });
@@ -433,22 +433,22 @@ describe(@"A State Machine Modeling Dating", ^{
             it(@"comsults a lawyer during the divorce", ^{
                 [[person should] receive:@selector(setConsultingLawyer:) withArguments:theValue(YES)];
                 [[person should] receive:@selector(setConsultingLawyer:) withArguments:theValue(NO)];
-                [stateMachine fireEvent:@"Divorce" error:nil];
+                [stateMachine fireEvent:@"Divorce" userInfo:nil error:nil];
             });
             
             it(@"transitions to the Single state", ^{
-                [stateMachine fireEvent:@"Divorce" error:nil];
+                [stateMachine fireEvent:@"Divorce" userInfo:nil error:nil];
                 [[stateMachine.currentState.name should] equal:@"Single"];
             });
             
             it(@"starts drinking heavily", ^{
                 [[person should] receive:@selector(startDrinkingHeavily)];
-                [stateMachine fireEvent:@"Divorce" error:nil];
+                [stateMachine fireEvent:@"Divorce" userInfo:nil error:nil];
             });
             
             it(@"starts trying to pick up college girls", ^{
                 [[person should] receive:@selector(startTryingToPickUpCollegeGirls)];
-                [stateMachine fireEvent:@"Divorce" error:nil];
+                [stateMachine fireEvent:@"Divorce" userInfo:nil error:nil];
             });
         });
     });
@@ -465,24 +465,24 @@ describe(@"A State Machine Modeling Dating", ^{
         
         context(@"when fired", ^{
             it(@"returns NO", ^{
-                [[@([stateMachine fireEvent:@"Break Up" error:nil]) should] beNo];
+                [[@([stateMachine fireEvent:@"Break Up" userInfo:nil error:nil]) should] beNo];
             });
             
             it(@"sets an TKInvalidTransitionError error", ^{
                 NSError *error = nil;
-                [stateMachine fireEvent:@"Break Up" error:&error];
+                [stateMachine fireEvent:@"Break Up" userInfo:nil error:&error];
                 [[@(error.code) should] equal:@(TKInvalidTransitionError)];
             });
             
             it(@"sets an informative description on the error", ^{
                 NSError *error = nil;
-                [stateMachine fireEvent:@"Break Up" error:&error];
+                [stateMachine fireEvent:@"Break Up" userInfo:nil error:&error];
                 [[[error localizedDescription] should] equal:@"The event cannot be fired from the current state."];
             });
             
             it(@"sets an informative failure reason on the error", ^{
                 NSError *error = nil;
-                [stateMachine fireEvent:@"Break Up" error:&error];
+                [stateMachine fireEvent:@"Break Up" userInfo:nil error:&error];
                 [[[error localizedFailureReason] should] equal:@"An attempt was made to fire the 'Break Up' event while in the 'Single' state, but the event can only be fired from the following states: Dating"];
             });
         });
